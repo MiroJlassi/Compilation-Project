@@ -1,9 +1,31 @@
 #include <stdio.h>
-#include <stdio.h>
 #include <string.h>
 
 char symbole[100]; // Pour stocker le symbole courant
 
+// call methods: 
+void lire_symbole();
+void erreur();
+void accepter(char *T);
+void P();
+void Dcl();
+void dclPrime();
+void List_id();
+void List_idPrime();
+void Type();
+void Inst_composee();
+void Inst();
+void Liste_inst();
+void Liste_instPrime();
+void Liste_instPrime();
+void I();
+void Exp();
+void ExpPrime();
+void Exp_simple();
+void Exp_simple_Prime();
+void Terme();
+void TermePrime();
+void Facteur();
 // Fonction pour lire une entrée utilisateur
 void lire_symbole()
 {
@@ -36,8 +58,9 @@ void P()
     accepter("id");
     accepter(";");
     Dcl();
-    Inst_composée();
+    Inst_composee();
 }
+
 void Dcl()
 {
     dclPrime();
@@ -55,6 +78,7 @@ void dclPrime()
         dclPrime();
     }
 }
+
 void List_id()
 {
     accepter("id");
@@ -78,7 +102,7 @@ void Type()
         erreur();
 }
 
-void Inst_composée()
+void Inst_composee()
 {
     accepter("begin");
     Inst();
@@ -160,3 +184,56 @@ void I()
     else
         erreur();
 }
+
+void Exp() {
+    Exp_simple();
+    ExpPrime();
+}
+
+void ExpPrime() {
+    Oprel();
+    Exp();
+}
+
+void Exp_simple(){
+    Facteur();
+    Exp_simple_Prime();
+}
+
+void Exp_simple_Prime(){
+    opadd();
+    Terme();
+    Exp_simple_Prime();
+}
+
+void Terme(){
+    Facteur();
+    TermePrime();
+}
+
+void TermePrime(){
+    Opmul();
+    Facteur();
+    TermePrime();
+}
+
+void Facteur(){
+    if (strcmp(symbole, "id") == 0){
+        accepter("id");
+        FacteurPrime();
+    }
+    else if (strcmp(symbole, "nb") == 0){
+        accepter("nb");
+        FacteurPrime();
+    }
+    else if (strcmp(symbole, "(") == 0){
+        accepter("(");
+        Exp_simple();
+        accepter(")");
+        FacteurPrime();
+    }else{
+        erreur();
+    }
+}
+
+
