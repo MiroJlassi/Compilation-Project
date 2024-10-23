@@ -59,6 +59,7 @@ void P()
     accepter(";");
     Dcl();
     Inst_composee();
+    accepter(".");
 }
 
 void Dcl()
