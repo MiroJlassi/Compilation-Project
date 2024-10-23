@@ -186,55 +186,90 @@ void I()
         erreur();
 }
 
-void Exp() {
+void Exp()
+{
     Exp_simple();
     ExpPrime();
 }
 
-void ExpPrime() {
-    Oprel();
-    Exp();
+void ExpPrime()
+{
+    if (strcmp(symbole, "oprel") == 0)
+    {
+        accepter("oprel");
+        Exp();
+    }
 }
 
-void Exp_simple(){
+void Exp_simple()
+{
     Facteur();
     Exp_simple_Prime();
 }
 
-void Exp_simple_Prime(){
-    opadd();
-    Terme();
-    Exp_simple_Prime();
+void Exp_simple_Prime()
+{
+    if (strcmp(symbole, "opadd") == 0)
+    {
+        accepter("opadd");
+        Terme();
+        Exp_simple_Prime();
+    }
 }
 
-void Terme(){
+void Terme()
+{
     Facteur();
     TermePrime();
 }
 
-void TermePrime(){
-    Opmul();
-    Facteur();
-    TermePrime();
+void TermePrime()
+{
+    if (strcmp(symbole, "opmul") == 0)
+    {
+        accepter("opmul");
+        Facteur();
+        TermePrime();
+    }
 }
 
-void Facteur(){
-    if (strcmp(symbole, "id") == 0){
+void Facteur()
+{
+    if (strcmp(symbole, "id") == 0)
+    {
         accepter("id");
-        FacteurPrime();
     }
-    else if (strcmp(symbole, "nb") == 0){
+    else if (strcmp(symbole, "nb") == 0)
+    {
         accepter("nb");
-        FacteurPrime();
     }
-    else if (strcmp(symbole, "(") == 0){
+    else if (strcmp(symbole, "(") == 0)
+    {
         accepter("(");
         Exp_simple();
         accepter(")");
-        FacteurPrime();
-    }else{
+    }
+    else
+    {
         erreur();
     }
+}
+
+int main()
+{
+    
+    lire_symbole();
+    P();
+    if (strcmp(symbole, ".") == 0)
+    {
+        printf("Analyse syntaxique réussie.\n");
+    }
+    else
+    {
+        erreur(); 
+    }
+
+    return 0;
 }
 
 
