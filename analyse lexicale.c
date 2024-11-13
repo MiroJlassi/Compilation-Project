@@ -4,20 +4,20 @@
 #include <ctype.h>
 
 #define id 1
-#define pv 2 //;
+#define pv 2 // ;
 #define nb 3
-#define dp 4  //:
+#define dp 4  // :
 #define aff 5 // affectation
 #define oprel 6
-#define ppe 7  //<=
-#define dif 8  //<>
-#define ppq 9  //<
-#define pgq 10 //>
-#define pge 11 //>=
-#define ega 12 //=
+#define ppe 7  // <=
+#define dif 8  // <>
+#define ppq 9  // <
+#define pgq 10 // >
+#define pge 11 // >=
+#define ega 12 // =
 #define opadd 13
 #define bl 14 // blanc
-#define pt 15 //.
+#define pt 15 // .
 #define v 16  // virgule
 #define po 17 // parenthèse ouvrante
 #define pf 18 // parenthèse fermante
@@ -50,7 +50,7 @@ int c = 0;
 FILE *fp; // fichier source
 
 int mot_cle[20] = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34};
-char tab_mot_cle[20][20] = {"program", "begin", "var", "integer", "chart", "end", "then", "if", "else", "read", "readln", "write", "writeln", "do", "while"};
+char tab_mot_cle[20][20] = {"program", "var", "integer", "char", "begin", "end", "if", "then", "else", "read", "readln", "write", "writeln", "do", "while"};
 
 char tab_iden[100][20];
 char car;
@@ -76,9 +76,7 @@ int unilexid()
     {
         if (strcmp(tab_mot_cle[i], ch) == 0)
         {
-            printf("mot cle \t%s\n", tab_mot_cle[i]);
-            int x;
-            scanf("%d", &x);
+            printf(" mot cle \t%s\n", tab_mot_cle[i]);
             k = 1;
         }
         else
@@ -91,7 +89,6 @@ int unilexid()
         printf("code mot cle %d", mot_cle[i]);
         return mot_cle[i];
     }
-
     else
     {
         return id;
@@ -108,18 +105,15 @@ int rangerid(int k, int *c)
             s++;
         if (s < *c)
         {
-
             return s;
         }
         else
         {
-            (*c)++;
             strcpy(tab_iden[*c], ch);
-
-            return *c;
+            (*c)++;
+            return *c - 1;
         }
     }
-
     else
     {
         return 0;
@@ -137,8 +131,6 @@ unilex analex()
         case 0:
             car = carsuivant();
 
-            int k;
-
             if (car == ' ' || car == '\t' || car == '\n')
             {
                 etat = 0;
@@ -152,6 +144,8 @@ unilex analex()
             }
             else if (isdigit(car))
             {
+                z = 0;
+                ch[0] = car;
                 etat = 3;
             }
             else if (car == '<')
@@ -166,32 +160,37 @@ unilex analex()
             {
                 etat = 9;
             }
-            else if (car == eof)
-            {
-                printf("end of file ");
-                scanf("%d", &k);
-                etat = 13;
-            }
             else if (car == ';')
             {
                 etat = 15;
             }
             else if (car == ',')
+            {
                 etat = 16;
+            }
             else if (car == '(')
+            {
                 etat = 17;
+            }
             else if (car == ':')
+            {
                 etat = 18;
+            }
             else if (car == ')')
+            {
                 etat = 19;
-
+            }
+            else if (car == EOF)
+            {
+                printf("end of file ");
+                etat = 13;
+            }
             else
             {
                 etat = 14;
             }
             break;
         case 1:
-
             car = carsuivant();
 
             if (isalpha(car) || isdigit(car))
@@ -203,7 +202,7 @@ unilex analex()
             {
                 etat = 2;
                 ch[z + 1] = '\0';
-                printf("this is the chaine %s", ch);
+                // printf("c'est la chaine %s \n", ch);
                 z = 0;
             }
             break;
@@ -213,7 +212,6 @@ unilex analex()
             symbole.att = rangerid(symbole.ul, &c);
             return symbole;
         case 3:
-            reculer(1);
             car = carsuivant();
             if (isdigit(car))
             {
@@ -233,7 +231,6 @@ unilex analex()
             symbole.att = atoi(ch);
             return symbole;
         case 5:
-
             car = carsuivant();
             switch (car)
             {
@@ -245,30 +242,9 @@ unilex analex()
                 break;
             default:
                 etat = 8;
+                break;
             }
             break;
-        case 9:
-            symbole.ul = oprel;
-            symbole.att = ega;
-
-            return symbole;
-        case 10:
-            reculer(1);
-            car = carsuivant();
-            if (car == '=')
-            {
-                etat = 11;
-            }
-            else
-            {
-                symbole.ul = oprel;
-                symbole.att = pge;
-                return symbole;
-            }
-        case 11:
-            symbole.ul = oprel;
-            symbole.att = pgq;
-            return symbole;
         case 6:
             symbole.ul = oprel;
             symbole.att = ppe;
@@ -282,8 +258,29 @@ unilex analex()
             symbole.ul = oprel;
             symbole.att = ppq;
             return symbole;
+        case 9:
+            symbole.ul = oprel;
+            symbole.att = ega;
+            return symbole;
+        case 10:
+            car = carsuivant();
+            if (car == '=')
+            {
+                etat = 11;
+            }
+            else
+            {
+                reculer(1);
+                symbole.ul = oprel;
+                symbole.att = pgq;
+                return symbole;
+            }
+            break;
+        case 11:
+            symbole.ul = oprel;
+            symbole.att = pge;
+            return symbole;
         case 12:
-
             symbole.ul = oprel;
             symbole.att = pgq;
             return symbole;
@@ -320,6 +317,7 @@ unilex analex()
             {
                 etat = 20;
             }
+            break;
         case 19:
             symbole.ul = pf;
             symbole.att = 0;
@@ -347,7 +345,6 @@ void Inst_composee();
 void Inst();
 void Liste_inst();
 void Liste_instPrime();
-void Liste_instPrime();
 void I();
 void Exp();
 void ExpPrime();
@@ -360,7 +357,7 @@ void Facteur();
 // Fonction pour afficher une erreur
 void erreur()
 {
-    printf("ERREUR: Symbole inattendu -> %s\n", symbole);
+    printf("ERREUR: Symbole inattendu -> %d\n", symbole.ul);
 }
 
 // Fonction d'acception :
@@ -377,12 +374,14 @@ void accepter(int t)
 }
 
 void P()
-{   if (symbole.ul == program){
-    accepter(program);
-    accepter(id);
-    accepter(pv);
-    Dcl();
-    Inst_composee();
+{
+    if (symbole.ul == program)
+    {
+        accepter(program);
+        accepter(id);
+        accepter(pv);
+        Dcl();
+        Inst_composee();
     }
 }
 
@@ -405,10 +404,12 @@ void dclPrime()
 }
 
 void List_id()
-{  if (symbole.ul==id){
-    accepter(id);
-    List_idPrime();
-}
+{
+    if (symbole.ul == id)
+    {
+        accepter(id);
+        List_idPrime();
+    }
 }
 
 void List_idPrime()
@@ -436,14 +437,9 @@ void Inst_composee()
     if (symbole.ul == begin)
     {
         accepter(begin);
-        Inst();
+        Liste_inst();
         accepter(end);
     }
-}
-
-void Inst()
-{
-    Liste_inst();
 }
 
 void Liste_inst()
@@ -457,7 +453,7 @@ void Liste_instPrime()
     if (symbole.ul == pv)
     {
         accepter(pv);
-        Liste_instPrime();
+        Liste_inst();
     }
 }
 
