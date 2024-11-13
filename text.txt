@@ -1,0 +1,12 @@
+program test1;
+var x,y;
+begin.
+(* initialisation de x *)
+x:=1;
+read(y);
+while x<y do begin read(y); x:=x+y+4 end;
+(* affichage des resultas
+de x et y *)
+write(x);
+write(y);
+end.

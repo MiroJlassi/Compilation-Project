@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
 
 #define id 1
 #define pv 2 //;
@@ -22,8 +20,7 @@
 #define po 17 // parenthèse ouvrante
 #define pf 18 // parenthèse fermante
 #define opmul 19
-#define eof 35
-// les mots clés
+
 #define program 20
 #define var 21
 #define integer 22
@@ -46,7 +43,7 @@ typedef struct unilex
     int att;
 } unilex;
 
-int c = 0;
+int *c = 0;
 FILE *fp; // fichier source
 
 int mot_cle[20] = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34};
@@ -139,7 +136,7 @@ unilex analex()
 
             int k;
 
-            if (car == ' ' || car == '\t' || car == '\n')
+            if (c == ' ' || c == '\t' || c == '\n')
             {
                 etat = 0;
                 break;
@@ -166,7 +163,7 @@ unilex analex()
             {
                 etat = 9;
             }
-            else if (car == eof)
+            else if (car == 'EOF')
             {
                 printf("end of file ");
                 scanf("%d", &k);
@@ -333,10 +330,10 @@ unilex analex()
     }
 }
 
-// analyse syntaxique ----------------------------------------------------------------------------------------------
+// analyse syntaxique
 
 void erreur();
-void accepter(int t);
+void accepter(char *T);
 void P();
 void Dcl();
 void dclPrime();
@@ -356,6 +353,7 @@ void Exp_simple_Prime();
 void Terme();
 void TermePrime();
 void Facteur();
+// Fonction pour lire une entrée utilisateur
 
 // Fonction pour afficher une erreur
 void erreur()
@@ -363,27 +361,26 @@ void erreur()
     printf("ERREUR: Symbole inattendu -> %s\n", symbole);
 }
 
-// Fonction d'acception :
-void accepter(int t)
+// Fonction d'acception : vérifie si le symbole actuel correspond à la chaîne attendue
+void accepter(char *T)
 {
-    if (symbole.ul == t)
+    if (strcmp(symbole, T) == 0)
     {
-        symbole = analex();
+        lire_symbole(); // Lire le symbole suivant
     }
     else
     {
-        erreur();
+        erreur(); // Afficher une erreur si le symbole ne correspond pas
     }
 }
 
 void P()
-{   if (symbole.ul == program){
-    accepter(program);
-    accepter(id);
-    accepter(pv);
+{
+    accepter("program");
+    accepter("id");
+    accepter(";");
     Dcl();
     Inst_composee();
-    }
 }
 
 void Dcl()
@@ -393,52 +390,45 @@ void Dcl()
 
 void dclPrime()
 {
-    if (symbole.ul == var)
+    if (strcmp(symbole, "var") == 0)
     {
-        accepter(var);
+        accepter("var");
         List_id();
-        accepter(dp);
+        accepter(":");
         Type();
-        accepter(pv);
+        accepter(";");
         dclPrime();
     }
 }
 
 void List_id()
-{  if (symbole.ul==id){
-    accepter(id);
+{
+    accepter("id");
     List_idPrime();
-}
 }
 
 void List_idPrime()
 {
-    if (symbole.ul == v)
-    {
-        accepter(v);
-        accepter(id);
-        List_idPrime();
-    }
+    accepter(",");
+    accepter("id");
+    List_idPrime();
 }
 
 void Type()
 {
-    if (symbole.ul == integer)
-        accepter(integer);
-    else if (symbole.ul == chart)
-        accepter(chart);
+    if (strcmp(symbole, "integer") == 0)
+        accepter("integer");
+    else if (strcmp(symbole, "char") == 0)
+        accepter("char");
     else
         erreur();
 }
 
 void Inst_composee()
 {
-    if (symbole.ul == begin)
-    {
-        accepter(begin);
-        Inst();
-        accepter(end);
-    }
+    accepter("begin");
+    Inst();
+    accepter("end");
 }
 
 void Inst()
@@ -454,64 +444,64 @@ void Liste_inst()
 
 void Liste_instPrime()
 {
-    if (symbole.ul == pv)
+    if (strcmp(symbole, ";") == 0)
     {
-        accepter(pv);
+        accepter(";");
         Liste_instPrime();
     }
 }
 
 void I()
 {
-    if (symbole.ul == id)
+    if (strcmp(symbole, "id") == 0)
     {
-        accepter(id);
-        accepter(aff);
+        accepter("id");
+        accepter(":=");
         Exp_simple();
     }
-    else if (symbole.ul == iff)
+    else if (strcmp(symbole, "if") == 0)
     {
-        accepter(iff);
+        accepter("if");
         Exp();
-        accepter(then);
+        accepter("then");
         I();
-        accepter(elsee);
+        accepter("else");
         I();
     }
-    else if (symbole.ul == whilee)
+    else if (strcmp(symbole, "while") == 0)
     {
-        accepter(whilee);
+        accepter("while");
         Exp();
-        accepter(doo);
+        accepter("do");
         I();
     }
-    else if (symbole.ul == read)
+    else if (strcmp(symbole, "read") == 0)
     {
-        accepter(read);
-        accepter(po);
-        accepter(id);
-        accepter(pf);
+        accepter("read");
+        accepter("(");
+        accepter("id");
+        accepter(")");
     }
-    else if (symbole.ul == readln)
+    else if (strcmp(symbole, "readln") == 0)
     {
-        accepter(readln);
-        accepter(po);
-        accepter(id);
-        accepter(pf);
+        accepter("readln");
+        accepter("(");
+        accepter("id");
+        accepter(")");
     }
-    else if (symbole.ul == write)
+    else if (strcmp(symbole, "write") == 0)
     {
-        accepter(write);
-        accepter(po);
-        accepter(id);
-        accepter(pf);
+        accepter("write");
+        accepter("(");
+        accepter("id");
+        accepter(")");
     }
-    else if (symbole.ul == writeln)
+    else if (strcmp(symbole, "writeln") == 0)
     {
-        accepter(writeln);
-        accepter(po);
-        accepter(id);
-        accepter(pf);
+        accepter("writeln");
+        accepter("(");
+        accepter("id");
+        accepter(")");
     }
     else
         erreur();
@@ -525,9 +515,9 @@ void Exp()
 
 void ExpPrime()
 {
-    if (symbole.ul == oprel)
+    if (strcmp(symbole, "oprel") == 0)
     {
-        accepter(oprel);
+        accepter("oprel");
         Exp();
     }
 }
@@ -540,9 +530,9 @@ void Exp_simple()
 
 void Exp_simple_Prime()
 {
-    if (symbole.ul == opadd)
+    if (strcmp(symbole, "opadd") == 0)
     {
-        accepter(opadd);
+        accepter("opadd");
         Terme();
         Exp_simple_Prime();
     }
@@ -556,9 +546,9 @@ void Terme()
 
 void TermePrime()
 {
-    if (symbole.ul == opmul)
+    if (strcmp(symbole, "opmul") == 0)
     {
-        accepter(opmul);
+        accepter("opmul");
         Facteur();
         TermePrime();
     }
@@ -566,19 +556,19 @@ void TermePrime()
 
 void Facteur()
 {
-    if (symbole.ul == id)
+    if (strcmp(symbole, "id") == 0)
     {
-        accepter(id);
+        accepter("id");
     }
-    else if (symbole.ul == nb)
+    else if (strcmp(symbole, "nb") == 0)
     {
-        accepter(nb);
+        accepter("nb");
     }
-    else if (symbole.ul == po)
+    else if (strcmp(symbole, "(" == 0))
     {
-        accepter(po);
+        accepter("(");
         Exp_simple();
-        accepter(pf);
+        accepter(")");
     }
     else
     {
@@ -609,6 +599,22 @@ int main()
 
     P();
     fclose(fp);
+
+    return 0;
+
+    // Lire le premier symbole pour commencer l'analyse
+
+    // Appeler la fonction de départ qui est P()
+
+    // Vérifier si l'analyse s'est terminée correctement avec un point final
+    if (strcmp(symbole, ".") == 0)
+    {
+        printf("Analyse syntaxique réussie.\n");
+    }
+    else
+    {
+        erreur(); // Afficher une erreur si le point final n'est pas trouvé
+    }
 
     return 0;
 }
