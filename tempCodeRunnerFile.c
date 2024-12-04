@@ -46,17 +46,24 @@ typedef struct unilex
     int att;
 } unilex;
 
+typedef struct identifiant
+{
+    char nom[100];
+    char type[100];
+} identifiant;
+
 int c = 0;
 FILE *fp; // fichier source
 
 int mot_cle[20] = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34};
 char tab_mot_cle[20][20] = {"program", "var", "integer", "char", "begin", "end", "if", "then", "else", "read", "readln", "write", "writeln", "do", "while"};
 
-char tab_iden[100][20];
+identifiant tab_iden[100];
 char car;
 unilex symbole;
 char ch[20];
 int z = 0;
+int nb_identifiant; // calcule la longueur de tab_iden
 
 void reculer(int k)
 {
@@ -101,7 +108,7 @@ int rangerid(int k, int *c)
 
     if (k == id)
     {
-        while ((strcmp(tab_iden[s], ch) != 0) && (s < (*c)))
+        while ((strcmp(tab_iden[s].nom, ch) != 0) && (s < (*c)))
             s++;
         if (s < *c)
         {
@@ -109,11 +116,40 @@ int rangerid(int k, int *c)
         }
         else
         {
-            strcpy(tab_iden[*c], ch);
+            strcpy(tab_iden[*c].nom, ch);
+            strcpy(tab_iden[*c].type, NULL); // Type non défini par défaut        //////////////////////////////////////////////////////////
+            nb_identifiant++;
             (*c)++;
             return *c - 1;
         }
     }
+    else
+    {
+        return 0;
+    }
+}
+
+// analyse semantique
+
+// Cherche le type d'un identifiant
+char *chercher_type(int index)
+{
+    if (index < 0 || index >= nb_identifiant)
+    {
+        printf("Erreur : index d'identifiant invalide !\n");
+        return NULL;
+    }
+    return (tab_iden[index].type); // Retourne le type
+}
+
+int compatible(char *type1, char *type2)
+{
+    // Si les types sont egaux, alors ils sont compatibles
+    if (strcmp(type1, type2) == 0)
+    {
+        return 1;
+    }
+    // Sinon, les types ne sont pas compatibles
     else
     {
         return 0;
@@ -180,7 +216,7 @@ unilex analex()
             {
                 etat = 19;
             }
-            else if (car == EOF)
+            else if (car == eof)
             {
                 printf("end of file ");
                 etat = 13;
@@ -209,7 +245,7 @@ unilex analex()
         case 2:
             reculer(1);
             symbole.ul = unilexid();
-            symbole.att = rangerid(symbole.ul, &c);
+            symbole.att = rangerid(symbole.ul, &c); // on stocke le retour de rangerid dans symbole.att (donc si l'identifiant existe on stocke son pointeur dans tab_iden)
             return symbole;
         case 3:
             car = carsuivant();
@@ -289,7 +325,7 @@ unilex analex()
             symbole.att = 0;
             return symbole;
         case 14:
-            printf("Erreur : caractère inattendu ");
+            printf("Erreur : caractere inattendu ");
             etat = 0;
             break;
         case 15:
@@ -397,7 +433,17 @@ void dclPrime()
         accepter(var);
         List_id();
         accepter(dp);
-        Type();
+
+        // definir le type pour les identifiants
+        char *type = NULL;
+        Type(&type);
+        for (int i = 0; i < nb_identifiant; i++)
+        {
+            if (strcmp(tab_iden[i].type, "NULL") == 0) // identifiant sans type
+            {
+                strcpy(tab_iden[i].type, type); // attribuer le type
+            }
+        }
         accepter(pv);
         dclPrime();
     }
@@ -422,14 +468,22 @@ void List_idPrime()
     }
 }
 
-void Type()
+void Type(char **type)
 {
     if (symbole.ul == integer)
+    {
         accepter(integer);
+        *type = "integer";
+    }
     else if (symbole.ul == chart)
+    {
         accepter(chart);
+        *type = "char";
+    }
     else
+    {
         erreur();
+    }
 }
 
 void Inst_composee()
@@ -444,7 +498,8 @@ void Inst_composee()
 
 void Liste_inst()
 {
-    I();
+    char *t1 = "vide"; // intialise comme vide cad pas d'erreur de type
+    I(&t1);
     Liste_instPrime();
 }
 
@@ -457,123 +512,196 @@ void Liste_instPrime()
     }
 }
 
-void I()
+void I(char *t1)
 {
+    char *t = NULL;       // initialisation
+    char *type_id = NULL; // type de l'identifiant
+    int num;              // index dans la table des identifiants tab_iden
+
     if (symbole.ul == id)
     {
+        num = symbole.att;
         accepter(id);
+        type_id = chercher_type(num);
         accepter(aff);
-        Exp_simple();
+        Exp(&t);
+
+        if (compatible(type_id, t))
+        {
+            t1 = "vide";
+        }
+        else
+        {
+            t1 = "erreur_de_type";
+            printf("Erreur : Incompatibilité des types");
+        }
     }
     else if (symbole.ul == iff)
     {
         accepter(iff);
-        Exp();
+        Exp(&t); // pour les expressions booleennes
+        if (strcmp(t, "boolean") != 0)
+        {
+            t1 = "erreur_de_type";
+            printf("Erreur : Condition non booléenne\n");
+        }
         accepter(then);
-        I();
+        I(t1);
         accepter(elsee);
-        I();
+        I(t1);
     }
     else if (symbole.ul == whilee)
     {
         accepter(whilee);
-        Exp();
+        Exp(&t);
+        if (strcmp(t, "boolean") != 0)
+        {
+            t1 = "erreur_de_type";
+            printf("Erreur : Condition non booléenne \n");
+        }
         accepter(doo);
-        I();
+        I(t1);
     }
-    else if (symbole.ul == read)
+    else if (symbole.ul == read || symbole.ul == readln)
     {
-        accepter(read);
+        accepter(symbole.ul);
         accepter(po);
+        num = symbole.att;
+        type_id = chercher_type(num);
         accepter(id);
         accepter(pf);
+
+        if (strcmp(type_id, "integer") != 0 && strcmp(type_id, "char") != 0)
+        {
+            t1 = "erreur_de_type";
+            printf("Erreur : Type incompatible pour read/readln\n");
+        }
     }
-    else if (symbole.ul == readln)
+    else if (symbole.ul == write || symbole.ul == writeln)
     {
-        accepter(readln);
+        accepter(symbole.ul);
         accepter(po);
+        num = symbole.att;
+        type_id = chercher_type(num);
         accepter(id);
         accepter(pf);
-    }
-    else if (symbole.ul == write)
-    {
-        accepter(write);
-        accepter(po);
-        accepter(id);
-        accepter(pf);
-    }
-    else if (symbole.ul == writeln)
-    {
-        accepter(writeln);
-        accepter(po);
-        accepter(id);
-        accepter(pf);
+
+        if (strcmp(type_id, "integer") != 0 && strcmp(type_id, "char") != 0)
+        {
+            t1 = "erreur_de_type";
+            printf("Erreur : Type incompatible pour write/writeln\n");
+        }
     }
     else
+    {
         erreur();
+    }
 }
 
-void Exp()
+void Exp(char *t1)
 {
-    Exp_simple();
-    ExpPrime();
+    char t2[20] = "vide";
+    Exp_simple(t1); // Analyse la première partie de l'expression (partie gauche)
+    ExpPrime(t1);   // Analyse les relations (opérateurs relationnels) et les met à jour
 }
 
-void ExpPrime()
+void ExpPrime(char *t1)
 {
     if (symbole.ul == oprel)
     {
+        char t2[20] = "vide";
         accepter(oprel);
-        Exp();
+        Exp(t2); // Analyse la partie droite de l'expression
+
+        // Verification de la compatibilité des types
+        if (!compatible(t1, t2))
+        {
+            t1 = "erreur_de_type"; // Propagation de l'erreur
+            printf("Erreur sémantique : types incompatibles dans l'opération relationnelle.\n");
+        }
     }
 }
 
-void Exp_simple()
+void Exp_simple(char *t1)
 {
-    Facteur();
-    Exp_simple_Prime();
+    char t2[20] = "vide";
+    Facteur(t2);
+    strcpy(t1, t2);
+    Exp_simple_Prime(t1);
 }
 
-void Exp_simple_Prime()
+void Exp_simple_Prime(char *t1)
 {
     if (symbole.ul == opadd)
     {
+        char t2[20] = "vide";
         accepter(opadd);
-        Terme();
-        Exp_simple_Prime();
+        Terme(t2); // Analyse le terme suivant et détermine son type
+
+        if (!compatible(t1, t2))
+        {
+            t1 = "erreur_de_type"; // Propagation de l'erreur
+            printf("Erreur sémantique : types incompatibles dans l'opération arithmétique.\n");
+        }
+
+        Exp_simple_Prime(t1);
     }
 }
 
-void Terme()
+void Terme(char **t)
 {
-    Facteur();
-    TermePrime();
+    char *t1 = NULL;
+    Facteur(&t1);
+    TermePrime(t, t1);
 }
 
-void TermePrime()
+void TermePrime(char **t, char *t1)
 {
     if (symbole.ul == opmul)
     {
         accepter(opmul);
-        Facteur();
-        TermePrime();
+        char *t2 = NULL;
+        Facteur(&t2);
+
+        if (compatible(t1, t2))
+        {
+            *t = t1;
+        }
+        else
+        {
+            *t = "erreur_de_type";
+            printf("Erreur : Types incompatibles dans le terme\n");
+        }
+    }
+    else
+    {
+        *t = t1;
     }
 }
 
-void Facteur()
+void Facteur(char **t)
 {
     if (symbole.ul == id)
     {
+        int num = symbole.att;
+        *t = chercher_type(num);
+
+        if (*t == NULL)
+        {
+            *t = "erreur_de_type";
+            printf("Erreur : Identifiant non déclaré\n");
+        }
         accepter(id);
     }
     else if (symbole.ul == nb)
     {
+        *t = "integer";
         accepter(nb);
     }
     else if (symbole.ul == po)
     {
         accepter(po);
-        Exp_simple();
+        Exp_simple(*t);
         accepter(pf);
     }
     else
