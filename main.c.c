@@ -466,7 +466,7 @@ void P() {
         Dcl();
         Inst_composee(t1);  // Pass type parameter
         accepter(pt);  // Ensure the program ends with '.'
-        printf("Parsing complete: Program is valid.\n");
+        printf("Parsing complete: Prodgram is valid.\n");
     } else {
         erreur();
     }

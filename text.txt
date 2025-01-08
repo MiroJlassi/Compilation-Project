@@ -1,9 +1,8 @@
-program test1;
-var x,y;
+program test; 
+    var 
+        x : integer;
 begin
-x:=1;
-read(y);
-while x<y do begin read(y); x:=x+y+4 end;
-write(x);
-write(y);
-end.
+    (* this is the greatest compilation project ever *)
+    x := 5;
+    (* end of code *)
+end .
