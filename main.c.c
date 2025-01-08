@@ -200,27 +200,27 @@ unilex analex() {
             } else if (car == '+') {
                 symbole.ul = opadd;
                 symbole.att = '+';
-                printf("Token: ADDITION_OPERATOR, Value: '+'\n");
+                printf(" ADDITION_OPERATOR, Value: '+'\n");
                 return symbole;
             } else if (car == '-') {
                 symbole.ul = opadd;
                 symbole.att = '-';
-                printf("Token: SUBTRACTION_OPERATOR, Value: '-'\n");
+                printf(" SUBTRACTION_OPERATOR, Value: '-'\n");
                 return symbole;
             } else if (car == '*') {
                 symbole.ul = opmul;
                 symbole.att = '*';
-                printf("Token: MULTIPLICATION_OPERATOR, Value: '*'\n");
+                printf(" MULTIPLICATION_OPERATOR, Value: '*'\n");
                 return symbole;
             } else if (car == '/') {
                 symbole.ul = opmul;
                 symbole.att = '/';
-                printf("Token: DIVISION_OPERATOR, Value: '/'\n");
+                printf(" DIVISION_OPERATOR, Value: '/'\n");
                 return symbole;
             } else if (car == EOF) {
                 symbole.ul = END_OF_FILE;
                 symbole.att = 0;
-                printf("Token: EOF\n");
+                printf(" EOF\n");
                 return symbole;
             } else {
                 printf("Unexpected character: '%c'\n", car);
@@ -241,7 +241,7 @@ unilex analex() {
             reculer(1);
             symbole.ul = unilexid();
             symbole.att = rangerid(symbole.ul, &c);
-            printf("Token: IDENTIFIER_OR_KEYWORD, Value: '%s'\n", ch);
+            printf(" IDENTIFIER_OR_KEYWORD, Value: '%s'\n", ch);
             return symbole;
         case 3: // Numeric constant
             car = carsuivant();
@@ -257,25 +257,25 @@ unilex analex() {
             reculer(1);
             symbole.ul = nb;
             symbole.att = atoi(ch);
-            printf("Token: NUMBER, Value: %d\n", symbole.att);
+            printf(" NUMBER, Value: %d\n", symbole.att);
             return symbole;
         case 5: // Relational operators
             car = carsuivant();
             if (car == '=') {
                 symbole.ul = oprel;
                 symbole.att = ppe;
-                printf("Token: LESS_THAN_OR_EQUAL, Value: '<='\n");
+                printf(" LESS_THAN_OR_EQUAL, Value: '<='\n");
                 return symbole;
             } else if (car == '>') {
                 symbole.ul = oprel;
                 symbole.att = dif;
-                printf("Token: NOT_EQUAL, Value: '<>'\n");
+                printf(" NOT_EQUAL, Value: '<>'\n");
                 return symbole;
             } else {
                 reculer(1);
                 symbole.ul = oprel;
                 symbole.att = ppq;
-                printf("Token: LESS_THAN, Value: '<'\n");
+                printf(" LESS_THAN, Value: '<'\n");
                 return symbole;
             }
         case 6:
@@ -294,7 +294,7 @@ unilex analex() {
         case 9:
             symbole.ul = oprel;
             symbole.att = ega;
-            printf("Token: EQUAL, Value: '='\n");
+            printf(" EQUAL, Value: '='\n");
             return symbole;
         case 10:
             car = carsuivant();
@@ -310,13 +310,13 @@ unilex analex() {
         case 11:
             symbole.ul = oprel;
             symbole.att = pge;
-            printf("Token: GREATER_THAN_OR_EQUAL, Value: '>='\n");
+            printf(" GREATER_THAN_OR_EQUAL, Value: '>='\n");
             return symbole;
         case 12:
             reculer(1);
             symbole.ul = oprel;
             symbole.att = pgq;
-            printf("Token: GREATER_THAN, Value: '>'\n");
+            printf(" GREATER_THAN, Value: '>'\n");
             return symbole;
         case 13:
             symbole.ul = 100;
@@ -329,36 +329,36 @@ unilex analex() {
         case 15:
             symbole.ul = pv;
             symbole.att = 0;
-            printf("Token: SEMICOLON, Value: ';'\n");
+            printf(" SEMICOLON, Value: ';'\n");
             return symbole;
         case 16: // Handle ','
             symbole.ul = v;
             symbole.att = 0;
-            printf("Token: COMMA, Value: ','\n");
+            printf(" COMMA, Value: ','\n");
             return symbole;
         case 17:
             symbole.ul = po;
             symbole.att = 0;
-            printf("Token: OPEN_PARENTHESIS, Value: '('\n");
+            printf(" OPEN_PARENTHESIS, Value: '('\n");
             return symbole;
         case 18: // Handle ':'
             car = carsuivant();
             if (car == '=') {
                 symbole.ul = aff; // Assignment operator
                 symbole.att = 0;
-                printf("Token: ASSIGNMENT_OPERATOR, Value: ':='\n");
+                printf(" ASSIGNMENT_OPERATOR, Value: ':='\n");
                 return symbole;
             } else {
                 reculer(1); // Go back if not '='
                 symbole.ul = dp; // Just a colon
                 symbole.att = 0;
-                printf("Token: COLON, Value: ':'\n");
+                printf(" COLON, Value: ':'\n");
                 return symbole;
             }
         case 19:
             symbole.ul = pf;
             symbole.att = 0;
-            printf("Token: CLOSE_PARENTHESIS, Value: ')'\n");
+            printf(" CLOSE_PARENTHESIS, Value: ')'\n");
             return symbole;
         case 20:
             reculer(1);
@@ -409,7 +409,7 @@ unilex analex() {
         case 28: // Handle '.'
             symbole.ul = pt; // Period
             symbole.att = 0;
-            printf("Token: PERIOD, Value: '.'\n");
+            printf(" PERIOD, Value: '.'\n");
             return symbole;
         }
     }
