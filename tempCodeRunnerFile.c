@@ -544,14 +544,13 @@ void P()
     char *t1 = "vide";
     if (symbole.ul == program)
     {
-        emettre(ch);
         accepter(program);
         accepter(id);
         accepter(pv);
         Dcl();
-        Inst_composee(t1);
-        accepter(pt);
-        printf("programme correct\n");
+        Inst_composee(t1); // Pass type parameter
+        accepter(pt);      // Ensure the program ends with '.'
+        printf("Parsing complete: Prodgram is valid.\n");
     }
     else
     {
@@ -561,13 +560,11 @@ void P()
 
 void Dcl()
 {
-    emettre(ch);
     dclPrime();
 }
 
 void dclPrime()
 {
-    emettre(ch);
     if (symbole.ul == var)
     {
         accepter(var);
@@ -591,7 +588,6 @@ void dclPrime()
 
 void List_id()
 {
-    emettre(ch);
     if (symbole.ul == id)
     {
         accepter(id);
@@ -601,7 +597,6 @@ void List_id()
 
 void List_idPrime()
 {
-    emettre(ch);
     if (symbole.ul == v)
     {
         accepter(v);
@@ -612,7 +607,6 @@ void List_idPrime()
 
 void Type(char **type)
 {
-    emettre(ch);
     if (symbole.ul == integer)
     {
         accepter(integer);
@@ -632,7 +626,6 @@ void Type(char **type)
 
 void Inst_composee(char *t1)
 {
-    emettre(ch);
     if (symbole.ul == begin)
     {
         accepter(begin);
@@ -647,14 +640,12 @@ void Inst_composee(char *t1)
 
 void Liste_inst(char *t1)
 {
-    emettre(ch);
     I(t1);
     Liste_instPrime(t1);
 }
 
 void Liste_instPrime(char *t1)
 {
-    emettre(ch);
     if (symbole.ul == pv)
     {
         accepter(pv);
@@ -664,7 +655,6 @@ void Liste_instPrime(char *t1)
 
 void I(char *t1)
 {
-    emettre(ch);
     char t[20];
     char *type_id = NULL;
     int num;
@@ -757,7 +747,6 @@ void I(char *t1)
 
 void Exp(char *t1)
 {
-    emettre(ch);
     char t2[20];
     Exp_simple(t1);
     ExpPrime(t1);
@@ -765,13 +754,14 @@ void Exp(char *t1)
 
 void ExpPrime(char *t1)
 {
-    emettre(ch);
     if (symbole.ul == oprel)
-    {
+    { // Relational operator
         char t2[20];
-        accepter(oprel);
+        accepter(oprel); // Accept the operator
+        printf("Parsing relational expression: Symbol %d\n", symbole.ul);
 
-        Exp(t2);
+        Exp(t2); // Parse the right-hand expression
+        printf("Parsing relational expression: Symbol %d\n", symbole.ul);
 
         // Check type compatibility
         if (!compatible(t1, t2))
@@ -781,14 +771,14 @@ void ExpPrime(char *t1)
         }
         else
         {
-            strcpy(t1, "boolean"); // Resultat de l'expression relationnelle est booleen
+            strcpy(t1, "boolean"); // Result of relational expressions is boolean
         }
+        printf("Parsing relational expression: Symbol %d\n", symbole.ul);
     }
 }
 
 void Exp_simple(char *t1)
 {
-    emettre(ch);
     char t2[20] = "vide";
     Facteur(t2);
     strcpy(t1, t2);
@@ -797,7 +787,6 @@ void Exp_simple(char *t1)
 
 void Exp_simple_Prime(char *t1)
 {
-    emettre(ch);
     if (symbole.ul == opadd)
     {
         char t2[20] = "vide";
@@ -816,7 +805,6 @@ void Exp_simple_Prime(char *t1)
 
 void Terme(char *t1)
 {
-    emettre(ch);
     char t2[20] = "vide";
     Facteur(t2);
     TermePrime(t1, t2);
@@ -824,7 +812,6 @@ void Terme(char *t1)
 
 void TermePrime(char *t1, char *t2)
 {
-    emettre(ch);
     if (symbole.ul == opmul)
     {
         accepter(opmul);
@@ -849,7 +836,6 @@ void TermePrime(char *t1, char *t2)
 
 void Facteur(char *t1)
 {
-    emettre(ch);
     if (symbole.ul == id)
     {
         int num = symbole.att;
@@ -930,7 +916,7 @@ int main()
     char fichier[50];
     printf("Entrez le nom du fichier source : ");
     scanf("%s", fichier);
-    fi = fopen("interm.txt", "wt");
+
     fp = fopen(fichier, "r");
     if (fp == NULL)
     {
@@ -946,7 +932,6 @@ int main()
     }
     remove_comments(fp, new_file);
     fclose(fp);
-
     fclose(new_file);
     new_file = fopen("new_file.txt", "r");
     if (new_file == NULL)
@@ -957,6 +942,5 @@ int main()
     symbole = analex();
     P();
     fclose(new_file);
-    fclose(fi);
     return 0;
 }
