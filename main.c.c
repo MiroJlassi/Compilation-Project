@@ -458,7 +458,7 @@ void accepter(int t)
 }
 
 void P() {
-    char *t1 = "vide";  // Initialize type checking
+    char *t1 = "vide";  
     if (symbole.ul == program) {
         accepter(program);
         accepter(id);
@@ -510,17 +510,17 @@ void List_id()
 }
 
 void List_idPrime() {
-    if (symbole.ul == v) { // Handle ','
+    if (symbole.ul == v) { 
         accepter(v);
-        accepter(id); // Next variable
-        List_idPrime(); // Recursive call for more variables
+        accepter(id);
+        List_idPrime();
     }
 }
 
 void Type(char **type) {
     if (symbole.ul == integer) {
         accepter(integer);
-        *type = strdup("integer");  // Use strdup to allocate new memory
+        *type = strdup("integer");  
     }
     else if (symbole.ul == chart) {
         accepter(chart);
@@ -534,37 +534,37 @@ void Type(char **type) {
 
 void Inst_composee(char *t1) {
     if (symbole.ul == begin) {
-        accepter(begin);       // Accept 'begin'
-        Liste_inst(t1);        // Parse the list of instructions
-        accepter(end);         // Accept 'end'
+        accepter(begin);       
+        Liste_inst(t1);       
+        accepter(end);         
     } else {
         erreur();
     }
 }
 
 void Liste_inst(char *t1) {
-    I(t1);  // Now passing t1 directly, not its address
+    I(t1);  
     Liste_instPrime(t1);
 }
 
 void Liste_instPrime(char *t1) {
-    if (symbole.ul == pv) {  // If a semicolon is found
+    if (symbole.ul == pv) {  
         accepter(pv);
-        Liste_inst(t1);      // Continue parsing the next instruction
+        Liste_inst(t1);      
     }
 }
 
 void I(char *t1) {
-    char t[20];              // Local type buffer
-    char *type_id = NULL;    // Type of identifier
-    int num;                 // Index in tab_iden
+    char t[20];              
+    char *type_id = NULL;    
+    int num;                 
 
     if (symbole.ul == id) {
         num = symbole.att;
         accepter(id);
-        type_id = chercher_type(num); // Fetch the type of the identifier
-        accepter(aff);                // Accept the assignment operator `:=`
-        Exp(t);                       // Evaluate the right-hand expression
+        type_id = chercher_type(num); 
+        accepter(aff);              
+        Exp(t);                      
 
         if (compatible(type_id, t)) {
             strcpy(t1, "vide");
@@ -575,7 +575,7 @@ void I(char *t1) {
     }
     else if (symbole.ul == iff) {
         accepter(iff);
-        Exp(t);            // Pass array as pointer
+        Exp(t);            
         if (strcmp(t, "boolean") != 0) {
             strcpy(t1, "erreur_de_type");
             printf("Erreur : Condition non booléenne\n");
@@ -586,33 +586,31 @@ void I(char *t1) {
         I(t1);
     }
     else if (symbole.ul == whilee) {
-        accepter(whilee);  // Accept 'while'
+        accepter(whilee); 
         char t1[20];
-        Exp(t1);  // Parse the condition expression
+        Exp(t1);  
         printf("Parsing instruction: Symbol %d\n", symbole.ul);
 
-        // Check if the condition evaluates to a boolean
         if (strcmp(t1, "boolean") != 0) {
             strcpy(t1, "erreur_de_type");
             printf("Erreur : Condition non booléenne dans le while\n");
         }
         printf("Parsing instruction: Symbol %d\n", symbole.ul);
 
-        accepter(doo);  // Accept 'do'
+        accepter(doo);  
         printf("Parsing instruction: Symbol %d\n", symbole.ul);
 
-        // Parse the body of the while loop
         if (symbole.ul == begin) {
-            Inst_composee(t1);  // Compound statement (begin ... end)
+            Inst_composee(t1); 
         } else {
-            I(t1);  // Single instruction
+            I(t1);  
         }
     }
     else if (symbole.ul == read || symbole.ul == write) {
-        accepter(symbole.ul); // Handle 'read' or 'write'
-        accepter(po); // Opening parenthesis
-        accepter(id); // Variable
-        accepter(pf); // Closing parenthesis
+        accepter(symbole.ul); 
+        accepter(po); 
+        accepter(id); 
+        accepter(pf);
     }
     else if (symbole.ul == write || symbole.ul == writeln) {
         accepter(symbole.ul);
@@ -634,8 +632,8 @@ void I(char *t1) {
 
 void Exp(char *t1) {
     char t2[20];
-    Exp_simple(t1);    // Uses t1 directly
-    ExpPrime(t1);      // Uses t1 directly
+    Exp_simple(t1);  
+    ExpPrime(t1);
 }
 
 void ExpPrime(char *t1) {
@@ -739,17 +737,14 @@ void Facteur(char *t1) {
 void remove_comments(FILE *input, FILE *output) {
     char ch;
     int in_comment = 0;
-
     while ((ch = fgetc(input)) != EOF) {
         if (ch == '(') {
-            // Check if the next character is a star (*), marking the start of a comment
             char next = fgetc(input);
             if (next == '*') {
                 in_comment = 1;
             } else {
-                // Write the '(' back if it's not the start of a comment
                 fputc(ch, output);
-                ungetc(next, input);  // Put the next character back to check in the next loop
+                ungetc(next, input); 
             }
         }
 
@@ -758,12 +753,10 @@ void remove_comments(FILE *input, FILE *output) {
         }
 
         if (ch == '*' && in_comment) {
-            // Check for the closing comment '*)'
             char next = fgetc(input);
             if (next == ')') {
                 in_comment = 0;
             } else {
-                // Write '*' back if it's not closing the comment
                 fputc('*', output);
                 ungetc(next, input);
             }
@@ -781,37 +774,22 @@ int main() {
         printf("Impossible d'ouvrir le fichier %s.\n", fichier);
         return 1;
     }
-
-    // Create a new output file to store the modified content
     FILE *new_file = fopen("new_file.txt", "w");
     if (new_file == NULL) {
         printf("Impossible de créer un fichier de sortie.\n");
         fclose(fp);
         return 1;
     }
-
-    // Remove comments from the input file and write to the new file
     remove_comments(fp, new_file);
-
-    // Close both files
     fclose(fp);
     fclose(new_file);
-
-    // Re-open the new file and continue processing
     new_file = fopen("new_file.txt", "r");
     if (new_file == NULL) {
         printf("Impossible d'ouvrir le fichier modifié.\n");
         return 1;
     }
-
-    // Get first symbol to start parsing
     symbole = analex();
-
-    // Start the parser
     P();
-
-    // Close the new file
     fclose(new_file);
-
     return 0;
 }
