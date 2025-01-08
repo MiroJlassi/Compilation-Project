@@ -7,7 +7,7 @@
 #define pv 2 // ;
 #define nb 3
 #define dp 4  // :
-#define aff 5 // affectation
+#define aff 5 // affectation :=
 #define oprel 6
 #define ppe 7  // <=
 #define dif 8  // <>
@@ -19,11 +19,11 @@
 #define bl 14 // blanc
 #define pt 15 // .
 #define v 16  // virgule
-#define po 17 // parenthèse ouvrante
-#define pf 18 // parenthèse fermante
+#define po 17 // parenthese ouvrante
+#define pf 18 // parenthese fermante
 #define opmul 19
-#define eof 35
-// les mots clés
+#define EOF 35
+// les mots cles
 #define program 20
 #define var 21
 #define integer 22
@@ -65,6 +65,14 @@ char ch[20];
 int z = 0;
 int nb_identifiant; // calcule la longueur de tab_iden
 
+void reculer(int k);
+char carsuivant();
+int unilexid();
+int rangerid(int k, int *c);
+char *chercher_type(int index);
+int compatible(char *type1, char *type2);
+unilex analex();
+
 void reculer(int k)
 {
     fseek(fp, -k, SEEK_CUR);
@@ -76,14 +84,14 @@ char carsuivant()
 }
 
 int unilexid()
-{ // si le lexème est un mot clé, retourne unité lexicale sinon retourne id
+{ // si le lexeme est un mot cle, retourne unite lexicale sinon retourne id
     int k = 0;
     int i = 0;
     while (i < 14 && (!k))
     {
         if (strcmp(tab_mot_cle[i], ch) == 0)
         {
-            printf(" mot cle \t%s\n", tab_mot_cle[i]);
+            // printf(" mot cle \t%s\n", tab_mot_cle[i]);
             k = 1;
         }
         else
@@ -93,7 +101,7 @@ int unilexid()
     }
     if (k == 1)
     {
-        printf("code mot cle %d", mot_cle[i]);
+        // printf("code mot cle %d", mot_cle[i]);
         return mot_cle[i];
     }
     else
@@ -103,7 +111,7 @@ int unilexid()
 }
 
 int rangerid(int k, int *c)
-{ // retourne un pointeur sur la table tab_iden si le lexème s'y trouve sinon il l'ajoute et retourne un pointeur, sinon on retourne 0
+{ // retourne un pointeur sur la table tab_iden si le lexeme s'y trouve sinon il l'ajoute et retourne un pointeur, sinon on retourne 0
     int s = 0;
 
     if (k == id)
@@ -117,19 +125,19 @@ int rangerid(int k, int *c)
         else
         {
             strcpy(tab_iden[*c].nom, ch);
-            strcpy(tab_iden[*c].type, "NULL"); // Type non défini par défaut        //////////////////////////////////////////////////////////
+            strcpy(tab_iden[*c].type, "NULL"); // Type non defini par defaut        //////////////////////////////////////////////////////////
             nb_identifiant++;
             (*c)++;
             return *c - 1;
         }
     }
-    else
+    else // c'est un mot cle
     {
         return 0;
     }
 }
 
-// analyse semantique
+// analyse semantique : chercher_type et compatible
 
 // Cherche le type d'un identifiant
 char *chercher_type(int index)
@@ -216,10 +224,26 @@ unilex analex()
             {
                 etat = 19;
             }
-            else if (car == eof)
+            else if (car == EOF)
             {
                 printf("end of file ");
                 etat = 13;
+            }
+            else if (car == '+' || car == '-')
+            {
+                etat = 22;
+            }
+            else if (car == '|')
+            {
+                etat = 23;
+            }
+            else if (car == '*' || car == '/' || car == '%')
+            {
+                etat = 25;
+            }
+            else if (car == '&')
+            {
+                etat = 26;
             }
             else
             {
@@ -306,10 +330,7 @@ unilex analex()
             }
             else
             {
-                reculer(1);
-                symbole.ul = oprel;
-                symbole.att = pgq;
-                return symbole;
+                etat = 12;
             }
             break;
         case 11:
@@ -317,6 +338,7 @@ unilex analex()
             symbole.att = pge;
             return symbole;
         case 12:
+            reculer(1);
             symbole.ul = oprel;
             symbole.att = pgq;
             return symbole;
@@ -324,7 +346,7 @@ unilex analex()
             symbole.ul = 100;
             symbole.att = 0;
             return symbole;
-        case 14:
+        case 14: ///////////////////////////////////////////////////////
             printf("Erreur : caractere inattendu ");
             etat = 0;
             break;
@@ -345,6 +367,7 @@ unilex analex()
             car = carsuivant();
             if (car == '=')
             {
+                etat = 21;
                 symbole.ul = aff;
                 symbole.att = 0;
                 return symbole;
@@ -361,6 +384,45 @@ unilex analex()
         case 20:
             reculer(1);
             symbole.ul = dp;
+            symbole.att = 0;
+            return symbole;
+        case 22:
+            symbole.ul = opadd;
+            symbole.att = 0;
+            return symbole;
+        case 23:
+            car = carsuivant();
+            if (car == '|')
+            {
+                etat = 24;
+            }
+            else
+            {
+                etat = 14; // caractère inattendu ;
+            }
+            break;
+        case 24:
+            symbole.ul = opadd;
+            symbole.att = 0;
+            return symbole;
+
+        case 25:
+            symbole.ul = opmul;
+            symbole.att = 0;
+            return symbole;
+        case 26:
+            car = carsuivant();
+            if (car == '&')
+            {
+                etat = 27;
+            }
+            else
+            {
+                etat = 14; // caractère inattendu
+            }
+            break;
+        case 27:
+            symbole.ul = opmul;
             symbole.att = 0;
             return symbole;
         }
@@ -617,7 +679,7 @@ void ExpPrime(char *t1)
         if (!compatible(t1, t2))
         {
             t1 = "erreur_de_type"; // Propagation de l'erreur
-            printf("Erreur sémantique : types incompatibles dans l'opération relationnelle.\n");
+            printf("Erreur semantique : types incompatibles dans l'operation relationnelle.\n");
         }
     }
 }
@@ -641,7 +703,7 @@ void Exp_simple_Prime(char *t1)
         if (!compatible(t1, t2))
         {
             t1 = "erreur_de_type"; // Propagation de l'erreur
-            printf("Erreur sémantique : types incompatibles dans l'opération arithmétique.\n");
+            printf("Erreur semantique : types incompatibles dans l'operation arithmetique.\n");
         }
 
         Exp_simple_Prime(t1);
@@ -729,7 +791,7 @@ int main()
 
         printf("\nSymbole : %d, Attribut : %d\n", symbole.ul, symbole.att);
 
-    } while (symbole.ul != 100);
+    } while (symbole.ul != 100); // EOF
 
     P();
     fclose(fp);
