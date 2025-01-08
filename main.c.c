@@ -22,7 +22,7 @@
 #define po 17 // parenthese ouvrante
 #define pf 18 // parenthese fermante
 #define opmul 19
-#define EOF 35
+#define END_OF_FILE 35
 // les mots cles
 #define program 20
 #define var 21
@@ -164,147 +164,120 @@ int compatible(char *type1, char *type2)
     }
 }
 
-unilex analex()
-{
+unilex analex() {
     int etat = 0;
 
-    while (1)
-    {
-        switch (etat)
-        {
+    while (1) {
+        switch (etat) {
         case 0:
             car = carsuivant();
-
-            if (car == ' ' || car == '\t' || car == '\n')
-            {
+            if (car == ' ' || car == '\t' || car == '\n') {
                 etat = 0;
                 break;
-            }
-            else if (isalpha(car))
-            {
+            } else if (car == '.') {
+                etat = 28;
+                break;
+            } else if (isalpha(car)) {
                 z = 0;
                 ch[0] = car;
                 etat = 1;
-            }
-            else if (isdigit(car))
-            {
+            } else if (isdigit(car)) {
                 z = 0;
                 ch[0] = car;
                 etat = 3;
-            }
-            else if (car == '<')
-            {
+            } else if (car == '<') {
                 etat = 5;
-            }
-            else if (car == '>')
-            {
+            } else if (car == '>') {
                 etat = 10;
-            }
-            else if (car == '=')
-            {
+            } else if (car == '=') {
                 etat = 9;
-            }
-            else if (car == ';')
-            {
+            } else if (car == ';') {
                 etat = 15;
-            }
-            else if (car == ',')
-            {
-                etat = 16;
-            }
-            else if (car == '(')
-            {
-                etat = 17;
-            }
-            else if (car == ':')
-            {
+            } else if (car == ':') {
                 etat = 18;
-            }
-            else if (car == ')')
-            {
+            } else if (car == ')') {
                 etat = 19;
-            }
-            else if (car == EOF)
-            {
-                printf("end of file ");
-                etat = 13;
-            }
-            else if (car == '+' || car == '-')
-            {
-                etat = 22;
-            }
-            else if (car == '|')
-            {
-                etat = 23;
-            }
-            else if (car == '*' || car == '/' || car == '%')
-            {
-                etat = 25;
-            }
-            else if (car == '&')
-            {
-                etat = 26;
-            }
-            else
-            {
-                etat = 14;
+            } else if (car == '+') {
+                symbole.ul = opadd;
+                symbole.att = '+';
+                printf("Token: ADDITION_OPERATOR, Value: '+'\n");
+                return symbole;
+            } else if (car == '-') {
+                symbole.ul = opadd;
+                symbole.att = '-';
+                printf("Token: SUBTRACTION_OPERATOR, Value: '-'\n");
+                return symbole;
+            } else if (car == '*') {
+                symbole.ul = opmul;
+                symbole.att = '*';
+                printf("Token: MULTIPLICATION_OPERATOR, Value: '*'\n");
+                return symbole;
+            } else if (car == '/') {
+                symbole.ul = opmul;
+                symbole.att = '/';
+                printf("Token: DIVISION_OPERATOR, Value: '/'\n");
+                return symbole;
+            } else if (car == EOF) {
+                symbole.ul = END_OF_FILE;
+                symbole.att = 0;
+                printf("Token: EOF\n");
+                return symbole;
+            } else {
+                printf("Unexpected character: '%c'\n", car);
+                etat = 0;
             }
             break;
-        case 1:
+        case 1: // Identifier or keyword
             car = carsuivant();
-
-            if (isalpha(car) || isdigit(car))
-            {
+            if (isalpha(car) || isdigit(car)) {
                 z++;
                 ch[z] = car;
-            }
-            else
-            {
+            } else {
                 etat = 2;
                 ch[z + 1] = '\0';
-                // printf("c'est la chaine %s \n", ch);
-                z = 0;
             }
             break;
         case 2:
             reculer(1);
             symbole.ul = unilexid();
-            symbole.att = rangerid(symbole.ul, &c); // on stocke le retour de rangerid dans symbole.att (donc si l'identifiant existe on stocke son pointeur dans tab_iden)
+            symbole.att = rangerid(symbole.ul, &c);
+            printf("Token: IDENTIFIER_OR_KEYWORD, Value: '%s'\n", ch);
             return symbole;
-        case 3:
+        case 3: // Numeric constant
             car = carsuivant();
-            if (isdigit(car))
-            {
+            if (isdigit(car)) {
                 z++;
                 ch[z] = car;
-            }
-            else
-            {
+            } else {
                 etat = 4;
                 ch[z + 1] = '\0';
-                z = 0;
             }
             break;
         case 4:
             reculer(1);
             symbole.ul = nb;
             symbole.att = atoi(ch);
+            printf("Token: NUMBER, Value: %d\n", symbole.att);
             return symbole;
-        case 5:
+        case 5: // Relational operators
             car = carsuivant();
-            switch (car)
-            {
-            case '=':
-                etat = 6;
-                break;
-            case '>':
-                etat = 7;
-                break;
-            default:
-                etat = 8;
-                break;
+            if (car == '=') {
+                symbole.ul = oprel;
+                symbole.att = ppe;
+                printf("Token: LESS_THAN_OR_EQUAL, Value: '<='\n");
+                return symbole;
+            } else if (car == '>') {
+                symbole.ul = oprel;
+                symbole.att = dif;
+                printf("Token: NOT_EQUAL, Value: '<>'\n");
+                return symbole;
+            } else {
+                reculer(1);
+                symbole.ul = oprel;
+                symbole.att = ppq;
+                printf("Token: LESS_THAN, Value: '<'\n");
+                return symbole;
             }
-            break;
         case 6:
             symbole.ul = oprel;
             symbole.att = ppe;
@@ -321,6 +294,7 @@ unilex analex()
         case 9:
             symbole.ul = oprel;
             symbole.att = ega;
+            printf("Token: EQUAL, Value: '='\n");
             return symbole;
         case 10:
             car = carsuivant();
@@ -336,50 +310,55 @@ unilex analex()
         case 11:
             symbole.ul = oprel;
             symbole.att = pge;
+            printf("Token: GREATER_THAN_OR_EQUAL, Value: '>='\n");
             return symbole;
         case 12:
             reculer(1);
             symbole.ul = oprel;
             symbole.att = pgq;
+            printf("Token: GREATER_THAN, Value: '>'\n");
             return symbole;
         case 13:
             symbole.ul = 100;
             symbole.att = 0;
             return symbole;
-        case 14: ///////////////////////////////////////////////////////
-            printf("Erreur : caractere inattendu ");
-            etat = 0;
+        case 14:
+            printf("Erreur : caractère inattendu -> '%c'\n", car);
+            etat = 0; // Reset to initial state
             break;
         case 15:
             symbole.ul = pv;
             symbole.att = 0;
+            printf("Token: SEMICOLON, Value: ';'\n");
             return symbole;
-        case 16:
+        case 16: // Handle ','
             symbole.ul = v;
             symbole.att = 0;
+            printf("Token: COMMA, Value: ','\n");
             return symbole;
         case 17:
             symbole.ul = po;
             symbole.att = 0;
+            printf("Token: OPEN_PARENTHESIS, Value: '('\n");
             return symbole;
-        case 18:
-            ch[0] = car;
+        case 18: // Handle ':'
             car = carsuivant();
-            if (car == '=')
-            {
-                etat = 21;
-                symbole.ul = aff;
+            if (car == '=') {
+                symbole.ul = aff; // Assignment operator
                 symbole.att = 0;
+                printf("Token: ASSIGNMENT_OPERATOR, Value: ':='\n");
+                return symbole;
+            } else {
+                reculer(1); // Go back if not '='
+                symbole.ul = dp; // Just a colon
+                symbole.att = 0;
+                printf("Token: COLON, Value: ':'\n");
                 return symbole;
             }
-            else
-            {
-                etat = 20;
-            }
-            break;
         case 19:
             symbole.ul = pf;
             symbole.att = 0;
+            printf("Token: CLOSE_PARENTHESIS, Value: ')'\n");
             return symbole;
         case 20:
             reculer(1);
@@ -387,9 +366,12 @@ unilex analex()
             symbole.att = 0;
             return symbole;
         case 22:
-            symbole.ul = opadd;
-            symbole.att = 0;
-            return symbole;
+            if (car == '+' || car == '-') {
+                symbole.ul = opadd; // Arithmetic operators
+                symbole.att = (car == '+') ? '+' : '-';
+                return symbole;
+            }
+            break;
         case 23:
             car = carsuivant();
             if (car == '|')
@@ -405,7 +387,6 @@ unilex analex()
             symbole.ul = opadd;
             symbole.att = 0;
             return symbole;
-
         case 25:
             symbole.ul = opmul;
             symbole.att = 0;
@@ -425,6 +406,11 @@ unilex analex()
             symbole.ul = opmul;
             symbole.att = 0;
             return symbole;
+        case 28: // Handle '.'
+            symbole.ul = pt; // Period
+            symbole.att = 0;
+            printf("Token: PERIOD, Value: '.'\n");
+            return symbole;
         }
     }
 }
@@ -438,19 +424,19 @@ void Dcl();
 void dclPrime();
 void List_id();
 void List_idPrime();
-void Type();
-void Inst_composee();
+void Type(char **type);
+void Inst_composee(char *t1);
 void Inst();
-void Liste_inst();
-void Liste_instPrime();
-void I();
-void Exp();
-void ExpPrime();
-void Exp_simple();
-void Exp_simple_Prime();
-void Terme();
-void TermePrime();
-void Facteur();
+void Liste_inst(char *t1);
+void Liste_instPrime(char *t1);
+void I(char *t1);
+void Exp(char *t1);
+void ExpPrime(char *t1);
+void Exp_simple(char *t1);
+void Exp_simple_Prime(char *t1);
+void Terme(char *t1);
+void TermePrime(char *t1, char *t2);
+void Facteur(char *t1);
 
 // Fonction pour afficher une erreur
 void erreur()
@@ -471,15 +457,18 @@ void accepter(int t)
     }
 }
 
-void P()
-{
-    if (symbole.ul == program)
-    {
+void P() {
+    char *t1 = "vide";  // Initialize type checking
+    if (symbole.ul == program) {
         accepter(program);
         accepter(id);
         accepter(pv);
         Dcl();
-        Inst_composee();
+        Inst_composee(t1);  // Pass type parameter
+        accepter(pt);  // Ensure the program ends with '.'
+        printf("Parsing complete: Program is valid.\n");
+    } else {
+        erreur();
     }
 }
 
@@ -520,91 +509,75 @@ void List_id()
     }
 }
 
-void List_idPrime()
-{
-    if (symbole.ul == v)
-    {
+void List_idPrime() {
+    if (symbole.ul == v) { // Handle ','
         accepter(v);
-        accepter(id);
-        List_idPrime();
+        accepter(id); // Next variable
+        List_idPrime(); // Recursive call for more variables
     }
 }
 
-void Type(char **type)
-{
-    if (symbole.ul == integer)
-    {
+void Type(char **type) {
+    if (symbole.ul == integer) {
         accepter(integer);
-        *type = "integer";
+        *type = strdup("integer");  // Use strdup to allocate new memory
     }
-    else if (symbole.ul == chart)
-    {
+    else if (symbole.ul == chart) {
         accepter(chart);
-        *type = "char";
+        *type = strdup("char");
     }
-    else
-    {
+    else {
+        erreur();
+        *type = NULL;
+    }
+}
+
+void Inst_composee(char *t1) {
+    if (symbole.ul == begin) {
+        accepter(begin);       // Accept 'begin'
+        Liste_inst(t1);        // Parse the list of instructions
+        accepter(end);         // Accept 'end'
+    } else {
         erreur();
     }
 }
 
-void Inst_composee()
-{
-    if (symbole.ul == begin)
-    {
-        accepter(begin);
-        Liste_inst();
-        accepter(end);
-    }
+void Liste_inst(char *t1) {
+    I(t1);  // Now passing t1 directly, not its address
+    Liste_instPrime(t1);
 }
 
-void Liste_inst()
-{
-    char *t1 = "vide"; // intialise comme vide cad pas d'erreur de type
-    I(&t1);
-    Liste_instPrime();
-}
-
-void Liste_instPrime()
-{
-    if (symbole.ul == pv)
-    {
+void Liste_instPrime(char *t1) {
+    if (symbole.ul == pv) {  // If a semicolon is found
         accepter(pv);
-        Liste_inst();
+        Liste_inst(t1);      // Continue parsing the next instruction
     }
 }
 
-void I(char *t1)
-{
-    char *t = NULL;       // initialisation
-    char *type_id = NULL; // type de l'identifiant
-    int num;              // index dans la table des identifiants tab_iden
+void I(char *t1) {
+    char t[20];              // Local type buffer
+    char *type_id = NULL;    // Type of identifier
+    int num;                 // Index in tab_iden
 
-    if (symbole.ul == id)
-    {
+    if (symbole.ul == id) {
         num = symbole.att;
         accepter(id);
-        type_id = chercher_type(num);
-        accepter(aff);
-        Exp(&t);
+        type_id = chercher_type(num); // Fetch the type of the identifier
+        accepter(aff);                // Accept the assignment operator `:=`
+        Exp(t);                       // Evaluate the right-hand expression
 
-        if (compatible(type_id, t))
-        {
-            t1 = "vide";
-        }
-        else
-        {
-            t1 = "erreur_de_type";
-            printf("Erreur : Incompatibilité des types");
+        if (compatible(type_id, t)) {
+            strcpy(t1, "vide");
+        } else {
+            strcpy(t1, "erreur_de_type");
+            printf("Erreur : Type incompatibility in assignment to '%s'.\n", tab_iden[num].nom);
         }
     }
-    else if (symbole.ul == iff)
-    {
+    else if (symbole.ul == iff) {
         accepter(iff);
-        Exp(&t); // pour les expressions booleennes
-        if (strcmp(t, "boolean") != 0)
-        {
-            t1 = "erreur_de_type";
+        Exp(t);            // Pass array as pointer
+        if (strcmp(t, "boolean") != 0) {
+            strcpy(t1, "erreur_de_type");
             printf("Erreur : Condition non booléenne\n");
         }
         accepter(then);
@@ -612,20 +585,36 @@ void I(char *t1)
         accepter(elsee);
         I(t1);
     }
-    else if (symbole.ul == whilee)
-    {
-        accepter(whilee);
-        Exp(&t);
-        if (strcmp(t, "boolean") != 0)
-        {
-            t1 = "erreur_de_type";
-            printf("Erreur : Condition non booléenne \n");
+    else if (symbole.ul == whilee) {
+        accepter(whilee);  // Accept 'while'
+        char t1[20];
+        Exp(t1);  // Parse the condition expression
+        printf("Parsing instruction: Symbol %d\n", symbole.ul);
+
+        // Check if the condition evaluates to a boolean
+        if (strcmp(t1, "boolean") != 0) {
+            strcpy(t1, "erreur_de_type");
+            printf("Erreur : Condition non booléenne dans le while\n");
         }
-        accepter(doo);
-        I(t1);
+        printf("Parsing instruction: Symbol %d\n", symbole.ul);
+
+        accepter(doo);  // Accept 'do'
+        printf("Parsing instruction: Symbol %d\n", symbole.ul);
+
+        // Parse the body of the while loop
+        if (symbole.ul == begin) {
+            Inst_composee(t1);  // Compound statement (begin ... end)
+        } else {
+            I(t1);  // Single instruction
+        }
     }
-    else if (symbole.ul == read || symbole.ul == readln)
-    {
+    else if (symbole.ul == read || symbole.ul == write) {
+        accepter(symbole.ul); // Handle 'read' or 'write'
+        accepter(po); // Opening parenthesis
+        accepter(id); // Variable
+        accepter(pf); // Closing parenthesis
+    }
+    else if (symbole.ul == write || symbole.ul == writeln) {
         accepter(symbole.ul);
         accepter(po);
         num = symbole.att;
@@ -633,54 +622,40 @@ void I(char *t1)
         accepter(id);
         accepter(pf);
 
-        if (strcmp(type_id, "integer") != 0 && strcmp(type_id, "char") != 0)
-        {
-            t1 = "erreur_de_type";
-            printf("Erreur : Type incompatible pour read/readln\n");
-        }
-    }
-    else if (symbole.ul == write || symbole.ul == writeln)
-    {
-        accepter(symbole.ul);
-        accepter(po);
-        num = symbole.att;
-        type_id = chercher_type(num);
-        accepter(id);
-        accepter(pf);
-
-        if (strcmp(type_id, "integer") != 0 && strcmp(type_id, "char") != 0)
-        {
-            t1 = "erreur_de_type";
+        if (strcmp(type_id, "integer") != 0 && strcmp(type_id, "char") != 0) {
+            strcpy(t1, "erreur_de_type");
             printf("Erreur : Type incompatible pour write/writeln\n");
         }
     }
-    else
-    {
+    else {
         erreur();
     }
 }
 
-void Exp(char *t1)
-{
-    char t2[20] = "vide";
-    Exp_simple(t1); // Analyse la premiere partie de l'expression (partie gauche)
-    ExpPrime(t1);   // Analyse les relations (operateurs relationnels) et les met a jour
+void Exp(char *t1) {
+    char t2[20];
+    Exp_simple(t1);    // Uses t1 directly
+    ExpPrime(t1);      // Uses t1 directly
 }
 
-void ExpPrime(char *t1)
-{
-    if (symbole.ul == oprel)
-    {
-        char t2[20] = "vide";
-        accepter(oprel);
-        Exp(t2); // Analyse la partie droite de l'expression
+void ExpPrime(char *t1) {
+    if (symbole.ul == oprel) {  // Relational operator
+        char t2[20];
+        accepter(oprel);  // Accept the operator
+        printf("Parsing relational expression: Symbol %d\n", symbole.ul);
 
-        // Verification de la compatibilite des types
-        if (!compatible(t1, t2))
-        {
-            t1 = "erreur_de_type"; // Propagation de l'erreur
-            printf("Erreur semantique : types incompatibles dans l'operation relationnelle.\n");
+        Exp(t2);          // Parse the right-hand expression
+        printf("Parsing relational expression: Symbol %d\n", symbole.ul);
+
+        // Check type compatibility
+        if (!compatible(t1, t2)) {
+            strcpy(t1, "erreur_de_type");
+            printf("Erreur : Types incompatibles dans l'expression relationnelle\n");
+        } else {
+            strcpy(t1, "boolean");  // Result of relational expressions is boolean
         }
+        printf("Parsing relational expression: Symbol %d\n", symbole.ul);
+
     }
 }
 
@@ -702,7 +677,7 @@ void Exp_simple_Prime(char *t1)
 
         if (!compatible(t1, t2))
         {
-            t1 = "erreur_de_type"; // Propagation de l'erreur
+            strcpy(t1, "erreur_de_type"); // Propagation de l'erreur
             printf("Erreur semantique : types incompatibles dans l'operation arithmetique.\n");
         }
 
@@ -710,91 +685,133 @@ void Exp_simple_Prime(char *t1)
     }
 }
 
-void Terme(char **t)
-{
-    char *t1 = NULL;
-    Facteur(&t1);
-    TermePrime(t, t1);
+void Terme(char *t1) {
+    char t2[20] = "vide";
+    Facteur(t2);
+    TermePrime(t1, t2);
 }
 
-void TermePrime(char **t, char *t1)
-{
-    if (symbole.ul == opmul)
-    {
+void TermePrime(char *t1, char *t2) {
+    if (symbole.ul == opmul) {
         accepter(opmul);
-        char *t2 = NULL;
-        Facteur(&t2);
+        char t3[20] = "vide";
+        Facteur(t3);
 
-        if (compatible(t1, t2))
-        {
-            *t = t1;
-        }
-        else
-        {
-            *t = "erreur_de_type";
+        if (compatible(t2, t3)) {
+            strcpy(t1, t2);
+        } else {
+            strcpy(t1, "erreur_de_type");
             printf("Erreur : Types incompatibles dans le terme\n");
         }
-    }
-    else
-    {
-        *t = t1;
+    } else {
+        strcpy(t1, t2);
     }
 }
 
-void Facteur(char **t)
-{
-    if (symbole.ul == id)
-    {
+void Facteur(char *t1) {
+    if (symbole.ul == id) {
         int num = symbole.att;
-        *t = chercher_type(num);
+        char *type = chercher_type(num);
 
-        if (*t == NULL)
-        {
-            *t = "erreur_de_type";
+        if (type == NULL) {
+            strcpy(t1, "erreur_de_type");
             printf("Erreur : Identifiant non déclaré\n");
+        } else {
+            strcpy(t1, type);
         }
         accepter(id);
     }
-    else if (symbole.ul == nb)
-    {
-        *t = "integer";
+    else if (symbole.ul == nb) {
+        strcpy(t1, "integer");
         accepter(nb);
     }
-    else if (symbole.ul == po)
-    {
+    else if (symbole.ul == po) {
         accepter(po);
-        Exp_simple(*t);
+        Exp_simple(t1);
         accepter(pf);
     }
-    else
-    {
+    else {
         erreur();
+        strcpy(t1, "erreur_de_type");
     }
 }
 
-int main()
-{
+void remove_comments(FILE *input, FILE *output) {
+    char ch;
+    int in_comment = 0;
+
+    while ((ch = fgetc(input)) != EOF) {
+        if (ch == '(') {
+            // Check if the next character is a star (*), marking the start of a comment
+            char next = fgetc(input);
+            if (next == '*') {
+                in_comment = 1;
+            } else {
+                // Write the '(' back if it's not the start of a comment
+                fputc(ch, output);
+                ungetc(next, input);  // Put the next character back to check in the next loop
+            }
+        }
+
+        if (!in_comment) {
+            fputc(ch, output);
+        }
+
+        if (ch == '*' && in_comment) {
+            // Check for the closing comment '*)'
+            char next = fgetc(input);
+            if (next == ')') {
+                in_comment = 0;
+            } else {
+                // Write '*' back if it's not closing the comment
+                fputc('*', output);
+                ungetc(next, input);
+            }
+        }
+    }
+}
+
+int main() {
     char fichier[50];
     printf("Entrez le nom du fichier source : ");
     scanf("%s", fichier);
 
     fp = fopen(fichier, "r");
-    if (fp == NULL)
-    {
+    if (fp == NULL) {
         printf("Impossible d'ouvrir le fichier %s.\n", fichier);
         return 1;
     }
 
-    do
-    {
-        symbole = analex();
+    // Create a new output file to store the modified content
+    FILE *new_file = fopen("new_file.txt", "w");
+    if (new_file == NULL) {
+        printf("Impossible de créer un fichier de sortie.\n");
+        fclose(fp);
+        return 1;
+    }
 
-        printf("\nSymbole : %d, Attribut : %d\n", symbole.ul, symbole.att);
+    // Remove comments from the input file and write to the new file
+    remove_comments(fp, new_file);
 
-    } while (symbole.ul != 100); // EOF
-
-    P();
+    // Close both files
     fclose(fp);
+    fclose(new_file);
+
+    // Re-open the new file and continue processing
+    new_file = fopen("new_file.txt", "r");
+    if (new_file == NULL) {
+        printf("Impossible d'ouvrir le fichier modifié.\n");
+        return 1;
+    }
+
+    // Get first symbol to start parsing
+    symbole = analex();
+
+    // Start the parser
+    P();
+
+    // Close the new file
+    fclose(new_file);
 
     return 0;
 }
